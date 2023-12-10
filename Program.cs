@@ -59,7 +59,7 @@ namespace Threading_CarRace
             Thread alfaromeo = new Thread(() => { race(alfaromeoCar); });
             Thread haas = new Thread(() => { race(haasCar); });
 
-            Thread status = new Thread(() => { raceStatus(list); });
+            Thread raceThread = new Thread(() => { raceStatus(list); });
 
             // Start all threads
             redbull.Start();
@@ -74,7 +74,7 @@ namespace Threading_CarRace
             haas.Start();
 
             //counter.Start();
-            status.Start();
+            raceThread.Start();
             
             // Wait for all threads to complete
             redbull.Join();
@@ -87,7 +87,7 @@ namespace Threading_CarRace
             alphatauri.Join();
             alfaromeo.Join();
             haas.Join();
-            status.Join();
+            raceThread.Join();
 
             // After race is complete
 
