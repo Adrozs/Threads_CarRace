@@ -77,7 +77,7 @@ namespace Threading_CarRace
             Console.WriteLine("|-----------------------------------------|");
             Console.WriteLine("|   Press [ENTER] to update race status   |");
             Console.WriteLine("|-----------------------------------------|");
-            Console.WriteLine("Live grid updates:");
+            Console.WriteLine("|            Live grid updates:           |");
 
             // Waits for user to press enter to clear screen and re-print race status
             ConsoleKeyInfo key = Console.ReadKey(true);
@@ -134,6 +134,7 @@ namespace Threading_CarRace
                         Console.SetCursorPosition(3, Console.CursorTop);
                         Console.Write($"BRONZE");
                         break;
+                    // Prints out the divider before the 4th place. Looks wierd but necessary to make it match the rest of the textformatting
                     case 4:
                         Console.WriteLine("--------------------------------------------|");
                         Console.SetCursorPosition(0, Console.CursorTop);
@@ -154,7 +155,7 @@ namespace Threading_CarRace
                 Console.SetCursorPosition(30, Console.CursorTop);
                 Console.Write("|");
 
-                string raceTimeFormatted = car.raceTime.TotalSeconds.ToString("0.0000"); // Format so there's always 3 decimals showing - for consistency
+                string raceTimeFormatted = car.raceTime.TotalSeconds.ToString("0.0000"); // Format so there's always 5 decimals showing - for consistency
 
                 Console.SetCursorPosition(32, Console.CursorTop);
                 Console.Write($"{raceTimeFormatted} sec");

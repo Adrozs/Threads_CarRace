@@ -14,7 +14,7 @@ namespace Threading_CarRace
 
         static bool raceIsWon = false;
         static object lockObject = new object();
-        static int cursorPos = 16;
+        static int cursorPos = 17;
         static List<Car> winOrder = new List<Car>();
         static Stopwatch stopwatch = new Stopwatch();
 
@@ -112,6 +112,7 @@ namespace Threading_CarRace
             car.reachedGoal = false;
             stopwatch.Start();
 
+            // Races until car has reached the goal
             while (!car.reachedGoal)
             {
                 pauseEvent.WaitOne(); // Wait for the event to be signaled
@@ -119,6 +120,7 @@ namespace Threading_CarRace
                 Thread.Sleep(1000);
                 car.seconds++;
 
+                // When seconds equal the selected interval, trigger a random event
                 if (car.seconds == eventInterval)
                 {
                     randomEvent(car, pauseEvent);
