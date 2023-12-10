@@ -13,5 +13,6 @@ namespace Threading_CarRace
         public double DistanceTravelled { get; set; } = 0;
         public int seconds { get; set; }
         public bool reachedGoal { get; set; }
+        public TimeSpan raceTime { get; set; }
     }
 }

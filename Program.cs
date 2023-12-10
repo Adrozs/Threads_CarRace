@@ -7,32 +7,47 @@ namespace Threading_CarRace
 {
     internal class Program
     {
-        static int raceDistance = 3;
-        static int eventInterval = 30;
+        // Create global variables 
+        static int raceDistance = 5; // Change to change the default race distance (km)
+        static int eventInterval = 30; // Change how often random events take place (seconds)
+        static int carSpeed = 120; // Change to change the default speed of the cars (km/h)
+
         static bool raceIsWon = false;
-        static bool allCarsInGoal = false;
         static object lockObject = new object();
         static int cursorPos = 16;
         static List<Car> winOrder = new List<Car>();
+        static Stopwatch stopwatch = new Stopwatch();
 
         static void Main(string[] args)
         {
-            int defaultCarSpeed = 120;
+            // Take user input to change settings
+            Console.WriteLine("Welcome to Formula Chas simulator - the pinnacle of motorsports!");
+            Console.WriteLine("----------------------------------------------------------------");
+
+            raceDistance = UserInput.setRaceDistance(raceDistance);
+            eventInterval = UserInput.setEventInterval(eventInterval);
+            carSpeed = UserInput.setCarSpeed(carSpeed);
+
+            // No more text inputs in program - hide cursor
             Console.CursorVisible = false;
+            Console.Clear();
 
-            // Create an instance of each car that's racing
-            Car redbullCar = new Car { Name = "RedBull", Speed = defaultCarSpeed };
-            Car mercedesCar = new Car { Name = "Mercedes", Speed = defaultCarSpeed };
-            Car ferrariCar = new Car { Name = "Ferrari", Speed = defaultCarSpeed };
-            Car mclarenCar = new Car { Name = "McLaren", Speed = defaultCarSpeed };
-            Car astonmartinCar = new Car { Name = "Aston Martin", Speed = defaultCarSpeed };
-            Car alpineCar = new Car { Name = "Alpine", Speed = defaultCarSpeed };
-            Car williamsCar = new Car { Name = "Williams", Speed = defaultCarSpeed };
-            Car alphatauriCar = new Car { Name = "AlphaTauri", Speed = defaultCarSpeed };
-            Car alfaromeoCar = new Car { Name = "Alfa Romeo", Speed = defaultCarSpeed };
-            Car haasCar = new Car { Name = "Haas", Speed = defaultCarSpeed };
+            // Create an instance of each of the 10 cars that are racing
+            Car redbullCar = new Car { Name = "RedBull", Speed = carSpeed };
+            Car mercedesCar = new Car { Name = "Mercedes", Speed = carSpeed };
+            Car ferrariCar = new Car { Name = "Ferrari", Speed = carSpeed };
+            Car mclarenCar = new Car { Name = "McLaren", Speed = carSpeed };
+            Car astonmartinCar = new Car { Name = "Aston Martin", Speed = carSpeed };
+            Car alpineCar = new Car { Name = "Alpine", Speed = carSpeed };
+            Car williamsCar = new Car { Name = "Williams", Speed = carSpeed };
+            Car alphatauriCar = new Car { Name = "AlphaTauri", Speed = carSpeed };
+            Car alfaromeoCar = new Car { Name = "Alfa Romeo", Speed = carSpeed };
+            Car haasCar = new Car { Name = "Haas", Speed = carSpeed };
 
-            // Create threads for each car and their race
+            // Create a list of all the cars
+            List<Car> list = new List<Car> { redbullCar, mercedesCar, ferrariCar, mclarenCar, astonmartinCar, alpineCar, williamsCar, alphatauriCar, alfaromeoCar, haasCar };
+
+            // Create threads for each car and the race method
             Thread redbull = new Thread(() => { race(redbullCar); });
             Thread mercedes = new Thread(() => { race(mercedesCar); });
             Thread ferrari = new Thread(() => { race(ferrariCar); });
@@ -44,15 +59,9 @@ namespace Threading_CarRace
             Thread alfaromeo = new Thread(() => { race(alfaromeoCar); });
             Thread haas = new Thread(() => { race(haasCar); });
 
-
-            List<Car> list = new List<Car> {redbullCar, mercedesCar, ferrariCar, mclarenCar, astonmartinCar, alpineCar, williamsCar, alphatauriCar, alfaromeoCar, haasCar };
-
-            // Create status thread that prints out the race status on user input
             Thread status = new Thread(() => { raceStatus(list); });
 
-
-            // Start all race- and the status thread(s)
-            Console.WriteLine("Race has started! \n\n\n");
+            // Start all threads
             redbull.Start();
             mercedes.Start();
             ferrari.Start();
@@ -64,6 +73,7 @@ namespace Threading_CarRace
             alfaromeo.Start();
             haas.Start();
 
+            //counter.Start();
             status.Start();
             
             // Wait for all threads to complete
@@ -77,65 +87,21 @@ namespace Threading_CarRace
             alphatauri.Join();
             alfaromeo.Join();
             haas.Join();
+            status.Join();
 
-
-            // After race is complete 
-            Console.WriteLine("\nRace is over!");
-
+            // After race is complete
 
             // Clears everything on the screen
             Console.SetCursorPosition(0, 0);
-            for (int i = 0; i < cursorPos+1; i++)
+            for (int i = 0; i < cursorPos + 1; i++)
             {
                 Console.Write(new string(' ', Console.WindowWidth));
                 Console.SetCursorPosition(0, Console.CursorTop + 1);
             }
 
-            // Reset cursor position
             Console.SetCursorPosition(0, 0);
 
-
-            Console.WriteLine("|  POSITION  |  CONSTRUCTOR  |");
-            Console.WriteLine("|----------------------------|");
-
-            Console.CursorTop = 2;
-
-            int position = 1;
-            foreach (var car in winOrder)
-            {
-                switch (position)
-                {
-                    case 1:
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        break;
-                    case 2:
-                        Console.ForegroundColor = ConsoleColor.DarkCyan;
-                        break;
-                    case 3:
-                        Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                        break;
-                }
-
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write("|");
-
-                Console.SetCursorPosition(3, Console.CursorTop);
-                Console.Write($"[{position}]:");
-
-                Console.SetCursorPosition(14, Console.CursorTop);
-                Console.Write("|");
-
-                Console.SetCursorPosition(16, Console.CursorTop);
-                Console.Write($"{car.Name}");
-
-                Console.SetCursorPosition(28, Console.CursorTop);
-                Console.Write("|");
-
-                Console.ResetColor();
-                Console.CursorTop++;
-                position++;
-            }
-
+            Utility.PrintRaceResults(winOrder);
         }
 
         // Handles everything for the race threads
@@ -144,7 +110,7 @@ namespace Threading_CarRace
             ManualResetEvent pauseEvent = new ManualResetEvent(true);
             car.seconds = 0;
             car.reachedGoal = false;
-            //Timer timer = new Timer(randomEvent, name, 0, 30000);
+            stopwatch.Start();
 
             while (!car.reachedGoal)
             {
@@ -157,27 +123,28 @@ namespace Threading_CarRace
                 {
                     randomEvent(car, pauseEvent);
 
-                    car.seconds = 0;
+                    car.seconds = 0; // Reset seconds
                 }
 
-                // Gets the distance travelled per second ex: x = 100 * (1 hour / 60 to get minutes / 60 to get seconds)
+                // Adds the distance travelled per second ex: 0,0277 = 100 * (1 hour / 60 to get minutes / 60 to get seconds)
                 car.DistanceTravelled += car.Speed * (1.0 / 60 / 60);
 
+                // If car has travelled further or equal to the total distance of the race - end the race
                 if (car.DistanceTravelled >= raceDistance)
                 {
-                    //timer.Dispose();
-
                     lock (lockObject)
                     {
+                        // If no one has won the race, this car is the winner
                         if (!raceIsWon)
                         {
                             raceIsWon = true;
                             car.reachedGoal = true;
+                            car.raceTime = stopwatch.Elapsed; 
 
                             Console.SetCursorPosition(0, cursorPos);
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            Console.Write($"{car.Name}");
                             Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write($"{car.Name} ");
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
                             Console.WriteLine("HAS WON THE RACE!");
                             Console.ResetColor();
                             cursorPos++;
@@ -188,9 +155,11 @@ namespace Threading_CarRace
 
                     lock (lockObject)
                     {
-                        if (raceIsWon)
+                        // Makes sure that someone has won the race and prevents that the winner gets access to this piece of code
+                        if (raceIsWon && !car.reachedGoal)
                         {
                             car.reachedGoal = true;
+                            car.raceTime = stopwatch.Elapsed;
 
                             Console.SetCursorPosition(0, cursorPos);
                             Console.ForegroundColor = ConsoleColor.Gray;
@@ -213,6 +182,11 @@ namespace Threading_CarRace
             Random rnd = new Random();
             int chance = rnd.Next(0, 50);            
 
+            // Selects a random event based on chance
+            // Locks each part where printing text is done to make sure several threads don't collide and mess up the text
+            // Adds one to cursorPos on each print so the next text wont print over the last one - that's why cursorPos is only used in this method
+            // Code looks a bit messy but that is only because I wanted to highlight each car name in a light color with the background in a darker color.
+            // I also wanted to make the messages when a car is back in the race to be a different color to stand out. So due to formatting.
             if (chance == 1) // 1/50 chance
             {
                 lock (lockObject)
@@ -225,6 +199,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine("team, they ran out of gas!");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
 
@@ -240,6 +215,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                     Console.WriteLine("tank is filled up and they're back on track!");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
             }
@@ -255,6 +231,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine("ran over a pothole and got a flat tire!");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
                 
@@ -272,6 +249,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                     Console.WriteLine("mechanics finally patched up the car in and they're off again.");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
             }
@@ -287,6 +265,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine("window! ");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
 
@@ -302,6 +281,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                     Console.WriteLine("finally managed to get rid of the bird and are getting back into the race!");
                     Console.ResetColor();
+                    
                     cursorPos++;
                 }
                         
@@ -318,6 +298,7 @@ namespace Threading_CarRace
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine("has engine troubles and are loosing speed! ");
                     Console.ResetColor();
+                    
                     cursorPos++;
                     car.Speed--;
                 }
@@ -329,90 +310,17 @@ namespace Threading_CarRace
         {
             while (true)
             { 
-
-                // If all 10 cars are in goal break out of the loop
+                // If all 10 cars are in goal break out of the loop 
                 if (winOrder.Count == 10)
                 {
                     break;
                 }
 
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("| POS  | CONSTRUCTOR | DISTANCE |  SPEED  |");
-                Console.WriteLine("|-----------------------------------------|");
-                Console.CursorTop = 2;
-
+                // Sort the list of cars by the distance they've travelled
                 List<Car> sortedCarList = carList.OrderByDescending(car => car.DistanceTravelled).ToList();
 
-                // Print out all car stats in the order of who has travelled the furthest i.e leading the race
-                int position = 1;
-                foreach (var car in sortedCarList)
-                {
-                    string distanceFormatted = car.DistanceTravelled.ToString("0.000"); // Format so there's always 3 decimals showing - for concistency 
-
-                    // Print out text in different colors for the top 3 in the race
-                    switch (position)
-                    {
-                        case 1:
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            break;
-                        case 2:
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
-                            break;
-                        case 3:
-                            Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                            break;
-                    }
-
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write("|");
-
-                    Console.SetCursorPosition(2, Console.CursorTop);
-                    Console.Write($"[{position}]:");
-
-                    Console.SetCursorPosition(7, Console.CursorTop);
-                    Console.Write("|");
-
-                    Console.SetCursorPosition(9, Console.CursorTop);
-                    Console.Write($"{car.Name}");
-
-                    Console.SetCursorPosition(21, Console.CursorTop);
-                    Console.Write("|");
-
-                    Console.SetCursorPosition(23, Console.CursorTop);
-                    Console.Write($"{distanceFormatted}km");
-
-                    Console.SetCursorPosition(32, Console.CursorTop);
-                    Console.Write("|");
-
-                    Console.SetCursorPosition(34, Console.CursorTop);
-                    Console.Write($"{car.Speed}km/h");
-
-                    Console.SetCursorPosition(42, Console.CursorTop);
-                    Console.Write("|");
-
-                    Console.ResetColor();
-                    Console.CursorTop++;
-                    position++;
-                }
-
-                Console.SetCursorPosition(0, 12);
-
-                Console.WriteLine("|-----------------------------------------|");
-                Console.WriteLine("|   Press [ENTER] to update race status   |");
-                Console.WriteLine("|-----------------------------------------|");
-                Console.WriteLine("Live grid updates:");            
-
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    // Clears only the status window when prompted so as to keep the events printed out from clearing
-                    Console.SetCursorPosition(0, 0);
-                    for (int i = 0; i < carList.Count; i++)
-                    {
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.SetCursorPosition(0, Console.CursorTop + 1);
-                    }
-                }
+                // Prints all the cars and their standings in the race
+                Utility.PrintRaceStatus(sortedCarList);
             }
         }
     }
