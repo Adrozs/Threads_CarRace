@@ -7,16 +7,20 @@ namespace Threading_CarRace
 {
     internal class Program
     {
-        // Create global variables 
+        // Global variables 
+
+        // Create default race variables 
         static int raceDistance = 5; // Change to change the default race distance (km)
-        static int eventInterval = 30; // Change how often random events take place (seconds)
+        static int eventSeconds = 30;// Change how often random events take place (seconds)
         static int carSpeed = 120; // Change to change the default speed of the cars (km/h)
 
         static bool raceIsWon = false;
         static object lockObject = new object();
         static int cursorPos = 17;
         static List<Car> winOrder = new List<Car>();
-        static Stopwatch stopwatch = new Stopwatch();
+        public static Stopwatch stopwatch = new Stopwatch();
+        static Stopwatch eventTimer = new Stopwatch();
+        static TimeSpan eventInterval = new TimeSpan(0, 0, eventSeconds);
 
         static void Main(string[] args)
         {
@@ -25,8 +29,8 @@ namespace Threading_CarRace
             Console.WriteLine("----------------------------------------------------------------");
 
             raceDistance = UserInput.setRaceDistance(raceDistance);
-            eventInterval = UserInput.setEventInterval(eventInterval);
             carSpeed = UserInput.setCarSpeed(carSpeed);
+            eventInterval = TimeSpan.FromSeconds(UserInput.setEventInterval(eventSeconds));
 
             // No more text inputs in program - hide cursor
             Console.CursorVisible = false;
@@ -73,7 +77,6 @@ namespace Threading_CarRace
             alfaromeo.Start();
             haas.Start();
 
-            //counter.Start();
             raceThread.Start();
             
             // Wait for all threads to complete
@@ -108,24 +111,24 @@ namespace Threading_CarRace
         static void race(Car car)
         {
             ManualResetEvent pauseEvent = new ManualResetEvent(true);
-            car.seconds = 0;
-            car.reachedGoal = false;
+            car.ReachedGoal = false;
+            eventTimer.Start();
             stopwatch.Start();
 
             // Races until car has reached the goal
-            while (!car.reachedGoal)
+            while (!car.ReachedGoal)
             {
-                pauseEvent.WaitOne(); // Wait for the event to be signaled
+                Thread.Sleep(1000); // Simulate 1 second
 
-                Thread.Sleep(1000);
-                car.seconds++;
+                pauseEvent.WaitOne(); // Wait for the event to be signaled;
+
 
                 // When seconds equal the selected interval, trigger a random event
-                if (car.seconds == eventInterval)
+                if (eventTimer.Elapsed >= eventInterval)
                 {
                     randomEvent(car, pauseEvent);
 
-                    car.seconds = 0; // Reset seconds
+                    eventTimer.Restart(); // Reset seconds
                 }
 
                 // Adds the distance travelled per second ex: 0,0277 = 100 * (1 hour / 60 to get minutes / 60 to get seconds)
@@ -140,8 +143,8 @@ namespace Threading_CarRace
                         if (!raceIsWon)
                         {
                             raceIsWon = true;
-                            car.reachedGoal = true;
-                            car.raceTime = stopwatch.Elapsed; 
+                            car.ReachedGoal = true;
+                            car.RaceTime = stopwatch.Elapsed; 
 
                             Console.SetCursorPosition(0, cursorPos);
                             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -158,10 +161,10 @@ namespace Threading_CarRace
                     lock (lockObject)
                     {
                         // Makes sure that someone has won the race and prevents that the winner gets access to this piece of code
-                        if (raceIsWon && !car.reachedGoal)
+                        if (raceIsWon && !car.ReachedGoal)
                         {
-                            car.reachedGoal = true;
-                            car.raceTime = stopwatch.Elapsed;
+                            car.ReachedGoal = true;
+                            car.RaceTime = stopwatch.Elapsed;
 
                             Console.SetCursorPosition(0, cursorPos);
                             Console.ForegroundColor = ConsoleColor.Gray;
@@ -172,6 +175,10 @@ namespace Threading_CarRace
                             cursorPos++;
 
                             winOrder.Add(car);
+
+                            // If last car has passed finish line then print message to let user know they need to press enter to continue
+                            if (winOrder.Count == 10)
+                                Console.WriteLine("\nPress [ENTER] to continue");
                         }
                     }
                 }
