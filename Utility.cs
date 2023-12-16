@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,8 +13,8 @@ namespace Threading_CarRace
         public static void PrintRaceStatus(List<Car> sortedCarList)
         {
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine("| POS  | CONSTRUCTOR | DISTANCE |  SPEED  |");
-            Console.WriteLine("|-----------------------------------------|");
+            Console.WriteLine($"| {Program.stopwatch.Elapsed.Minutes}:{Program.stopwatch.Elapsed.Seconds:00} | CONSTRUCTOR | DISTANCE |  SPEED  |");
+            Console.WriteLine("|-----------------------------------------|");       
             Console.CursorTop = 2;
 
             // Print out all car stats in the order of who has travelled the furthest i.e leading the race
@@ -155,7 +156,7 @@ namespace Threading_CarRace
                 Console.SetCursorPosition(30, Console.CursorTop);
                 Console.Write("|");
 
-                string raceTimeFormatted = car.raceTime.TotalSeconds.ToString("0.0000"); // Format so there's always 5 decimals showing - for consistency
+                string raceTimeFormatted = car.RaceTime.TotalSeconds.ToString("0.0000"); // Format so there's always 5 decimals showing - for consistency
 
                 Console.SetCursorPosition(32, Console.CursorTop);
                 Console.Write($"{raceTimeFormatted} sec");
